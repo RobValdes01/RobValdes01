@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD Profesional - Node + EJS</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://jsdelivr.net" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div class="container mt-5">
+    <div class="row">
+      <!-- Formulario (Izquierda) -->
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0" id="formTitle">Agregar Usuario</h5>
+          </div>
+          <div class="card-body">
+            <form id="formulario" action="/create" method="POST" class="needs-validation" novalidate>
+              <input type="hidden" id="userId" name="id">
+              
+              <div class="mb-3">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" id="userNombre" name="nombre" class="form-control" required minlength="3" autocomplete="off">
+                <div class="invalid-feedback">Mínimo 3 caracteres.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Correo Electrónico</label>
+                <input type="email" id="userCorreo" name="correo" class="form-control" required placeholder="ejemplo@correo.com">
+                <div class="invalid-feedback">Ingresa un correo válido.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Edad</label>
+                <input type="number" id="userEdad" name="edad" class="form-control" required min="1" max="120">
+                <div class="invalid-feedback">Edad válida entre 1 y 120.</div>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" id="btnSubmit" class="btn btn-success">Guardar</button>
+                <button type="button" id="btnCancelar" class="btn btn-secondary" style="display:none;" onclick="cancelarEdicion()">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Datos (Derecha) -->
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0">Registros Activos</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Edad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (usuarios.length === 0) { %>
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No hay usuarios registrados</td>
+                    </tr>
+                  <% } else { %>
+                    <% usuarios.forEach(u => { %>
+                      <tr>
+                        <td><%= u.id %></td>
+                        <td><strong><%= u.nombre %></strong></td>
+                        <td><%= u.correo %></td>
+                        <td><span class="badge bg-secondary"><%= u.edad %> años</span></td>
+                        <td>
+                          <button class="btn btn-sm btn-warning me-1" onclick="editarUser(<%= u.id %>, '<%= u.nombre %>', '<%= u.correo %>', <%= u.edad %>)">Editar</button>
+                          <a href="/delete/<%= u.id %>" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar a <%= u.nombre %>?')">Eliminar</a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript para interactividad y validaciones de Bootstrap -->
+  <script>
+    function editarUser(id, nombre, correo, edad) {
+      document.getElementById('formulario').action = '/update';
+      document.getElementById('userId').value = id;
+      document.getElementById('userNombre').value = nombre;
+      document.getElementById('userCorreo').value = correo;
+      document.getElementById('userEdad').value = edad;
+      document.getElementById('formTitle').innerText = 'Editar Usuario #' + id;
+      document.getElementById('btnSubmit').innerText = 'Actualizar';
+      document.getElementById('btnSubmit').className = 'btn btn-warning';
+      document.getElementById('btnCancelar').style.display = 'inline-block';
+    }
+
+    function cancelarEdicion() {
+      document.getElementById('formulario').action = '/create';
+      document.getElementById('userId').value = '';
+      document.getElementById('formulario').reset();
+      document.getElementById('formTitle').innerText = 'Agregar Usuario';
+      document.getElementById('btnSubmit').innerText = 'Guardar';
+      document.getElementById('btnSubmit').className = 'btn btn-success';
+      document.getElementById('btnCancelar').style.display = 'none';
+    }
+
+    // Validación nativa de formularios de Bootstrap
+    (function () {
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+    })()
+  </script>
+</body>
+</html>

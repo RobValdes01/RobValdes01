@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD Profesional - Node + EJS</title>
+  <!-- Enlace local a Bootstrap instalado vía npm -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div class="container mt-5">
+    
+    <!-- Cabecera con título y botón de salir -->
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+      <h2 class="mb-0 text-dark">CRUD de Usuarios en NODE con SQL Lite</h2>
+      <a href="/logout" class="btn btn-danger d-flex align-items-center">
+        Cerrar Sesión
+      </a>
+    </div>
+
+    <!-- Contenedor de Alertas Dinámicas (Paso 2) -->
+    <% if (mensajeExito && mensajeExito.length > 0) { %>
+      <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <strong>¡Hecho!</strong> <%= mensajeExito %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+
+    <% if (mensajeError && mensajeError.length > 0) { %>
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Error:</strong> <%= mensajeError %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+
+    <!-- BARRA DE BÚSQUEDA EN TIEMPO REAL (Paso 3) -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card shadow-sm">
+          <div class="card-body py-2">
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">🔍</span>
+              <input type="text" id="buscador" class="form-control border-start-0 ps-0" placeholder="Buscar usuarios por nombre o correo en tiempo real..." autocomplete="off">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Formulario (Izquierda) -->
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0" id="formTitle">Agregar Usuario</h5>
+          </div>
+          <div class="card-body">
+            <form id="formulario" action="/create" method="POST" class="needs-validation" novalidate>
+              <input type="hidden" id="userId" name="id">
+              
+              <div class="mb-3">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" id="userNombre" name="nombre" class="form-control" required minlength="3" autocomplete="off">
+                <div class="invalid-feedback">Mínimo 3 caracteres.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Correo Electrónico</label>
+                <input type="email" id="userCorreo" name="correo" class="form-control" required placeholder="ejemplo@correo.com">
+                <div class="invalid-feedback">Ingresa un correo válido.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Edad</label>
+                <input type="number" id="userEdad" name="edad" class="form-control" required min="1" max="120">
+                <div class="invalid-feedback">Edad válida entre 1 y 120.</div>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" id="btnSubmit" class="btn btn-success">Guardar</button>
+                <button type="button" id="btnCancelar" class="btn btn-secondary" style="display:none;" onclick="cancelarEdicion()">Cancelar</button>
+              </div>
+         
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Datos (Derecha) -->
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0">Registros Activos</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Edad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaCuerpo">
+                  <% if (usuarios.length === 0) { %>
+                    <tr class="fila-vacia">
+                      <td colspan="5" class="text-center text-muted py-4">No hay usuarios registrados</td>
+                    </tr>
+                  <% } else { %>
+                    <% usuarios.forEach(u => { %>
+                      <tr class="fila-usuario">
+                        <td><%= u.id %></td>
+                        <td class="col-nombre"><strong><%= u.nombre %></strong></td>
+                        <td class="col-correo"><%= u.correo %></td>
+                        <td><span class="badge bg-secondary"><%= u.edad %> años</span></td>
+                        <td>
+                          <button class="btn btn-sm btn-warning me-1" onclick="editarUser(<%= u.id %>, '<%= u.nombre %>', '<%= u.correo %>', <%= u.edad %>)">Editar</button>
+                          <a href="/delete/<%= u.id %>" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar a <%= u.nombre %>?')">Eliminar</a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Controles de Paginación -->
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center border-top py-3">
+              <span class="text-muted small">
+                Página <strong><%= paginaActual %></strong> de <strong><%= totalPaginas %></strong>
+              </span>
+              <nav aria-label="Navegación de páginas">
+                <ul class="pagination pagination-sm mb-0">
+                  
+                  <!-- Botón Anterior -->
+                  <li class="page-item <%= paginaActual === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="/?pagina=<%= paginaActual - 1 %>">Anterior</a>
+                  </li>
+
+                  <!-- Números de Páginas Dinámicos -->
+                  <% for(let i = 1; i <= totalPaginas; i++) { %>
+                    <li class="page-item <%= paginaActual === i ? 'active' : '' %>">
+                      <a class="page-link" href="/?pagina=<%= i %>"><%= i %></a>
+                    </li>
+                  <% } %>
+
+                  <!-- Botón Siguiente -->
+                  <li class="page-item <%= paginaActual === totalPaginas ? 'disabled' : '' %>">
+                    <a class="page-link" href="/?pagina=<%= paginaActual + 1 %>">Siguiente</a>
+                  </li>
+
+                </ul>
+              </nav>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript reparado por completo -->
+  <script>
+    function editarUser(id, nombre, correo, edad) {
+      const form = document.getElementById('formulario');
+      form.classList.remove('was-validated');
+
+      document.getElementById('formulario').action = '/update';
+      document.getElementById('userId').value = id;
+      document.getElementById('userNombre').value = nombre;
+      document.getElementById('userCorreo').value = correo;
+      document.getElementById('userEdad').value = edad;
+      document.getElementById('formTitle').innerText = 'Editar Usuario #' + id;
+      document.getElementById('btnSubmit').innerText = 'Actualizar';
+      document.getElementById('btnSubmit').className = 'btn btn-warning';
+      document.getElementById('btnCancelar').style.display = 'inline-block';
+    }
+
+    function cancelarEdicion() {
+      const form = document.getElementById('formulario');
+      form.classList.remove('was-validated');
+      
+      document.getElementById('formulario').action = '/create';
+      document.getElementById('userId').value = '';
+      form.reset();
+      document.getElementById('formTitle').innerText = 'Agregar Usuario';
+      document.getElementById('btnSubmit').innerText = 'Guardar';
+      document.getElementById('btnSubmit').className = 'btn btn-success';
+      document.getElementById('btnCancelar').style.display = 'none';
+    }
+
+    // Validación nativa de formularios de Bootstrap
+    (function () {
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false)
+      })
+    })()
+
+    // Lógica del Buscador en tiempo real
+    document.getElementById('buscador').addEventListener('input', function(e) {
+      const termino = e.target.value.toLowerCase().trim();
+      const filas = document.querySelectorAll('.fila-usuario');
+
+      filas.forEach(fila => {
+        const nombre = fila.querySelector('.col-nombre').innerText.toLowerCase();
+        const correo = fila.querySelector('.col-correo').innerText.toLowerCase();
+
+        if (nombre.includes(termino) || correo.includes(termino)) {
+          fila.style.display = '';
+        } else {
+          fila.style.display = 'none';
+        }
+      });
+    });
+  </script>
+  
+  <!-- JavaScript oficial de Bootstrap para interactividad de alertas -->
+  <script src="https://jsdelivr.net"></script>
+</body>
+</html>
