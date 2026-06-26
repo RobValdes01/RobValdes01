@@ -118,8 +118,10 @@
                         <td class="col-correo"><%= u.correo %></td>
                         <td><span class="badge bg-secondary"><%= u.edad %> años</span></td>
                         <td>
-                          <button class="btn btn-sm btn-warning me-1" onclick="editarUser(<%= u.id %>, '<%= u.nombre %>', '<%= u.correo %>', <%= u.edad %>)">Editar</button>
-                          <a href="/delete/<%= u.id %>" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar a <%= u.nombre %>?')">Eliminar</a>
+						<button class="btn btn-sm btn-warning me-1" onclick="editarUser('<%= u._id %>', '<%= u.nombre %>', '<%= u.correo %>', <%= u.edad %>)">Editar</button>
+						<a href="/delete/<%= u._id %>" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar a <%= u.nombre %>?')">Eliminar</a>
+                      <!-- <button class="btn btn-sm btn-warning me-1" onclick="editarUser(<%= u.id %>, '<%= u.nombre %>', '<%= u.correo %>', <%= u.edad %>)">Editar</button>
+                          <a href="/delete/<%= u.id %>" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar a <%= u.nombre %>?')">Eliminar</a> -->
                         </td>
                       </tr>
                     <% }) %>
